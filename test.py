@@ -5,29 +5,16 @@ import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from string import punctuation
 from heapq import nlargest
+from happytransformer import HappyTextToText
+from happytransformer import TTSettings
+from textblob import TextBlob
 
-# reader = easyocr.Reader(['en'],gpu = False) # load once only in memory.
-
-# image_file_name="article.png" 
-# image = cv2.imread(image_file_name)
-
-# # sharp the edges or image.
-# gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-# sharpen_kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
-# sharpen = cv2.filter2D(gray, -1, sharpen_kernel)
-# thresh = cv2.threshold(sharpen, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-# r_easy_ocr=reader.readtext(thresh,detail=0)
-# print(type(r_easy_ocr))
-
-# stringg=""
-# print(stringg.join(r_easy_ocr))
-# string_f=stringg.join(r_easy_ocr)
 from PIL import Image
 from pytesseract import pytesseract
 #Define path to tessaract.exe
 path_to_tesseract = r'C:/Program Files/Tesseract-OCR/tesseract.exe'
 #Define path to image
-path_to_image = 'article.png'
+path_to_image = 'samp_4.jpg'
 #Point tessaract_cmd to tessaract.exe
 pytesseract.tesseract_cmd = path_to_tesseract
 #Open image with PIL
@@ -35,6 +22,8 @@ img = Image.open(path_to_image)
 #Extract text from image
 texts = pytesseract.image_to_string(img)
 # print(text)
+happy_tt = HappyTextToText("T5",  "prithivida/grammar_error_correcter_v1")
+settings = TTSettings(do_sample=True, top_k=10, temperature=0.5,  min_length=1, max_length=100)
 
 def summarize(text, per):
     nlp = spacy.load('en_core_web_sm')
@@ -67,5 +56,17 @@ def summarize(text, per):
     return summary
 
 
-print(summarize(texts, 0.1))
-# print(final)
+sum_string = summarize(texts , 0.20)
+string_list = sum_string.split(".")
+result_new=""
+for i in string_list:
+    result = happy_tt.generate_text("gec : "+i, args=settings)
+    
+    sentence = TextBlob(result.text)
+    result_new = result_new+ "." +str(sentence.correct())
+print(result_new)
+
+
+
+# result = happy_tt.generate_text("gec : "+summarize(texts, 0.1), args=settings)
+# print(result.text)
