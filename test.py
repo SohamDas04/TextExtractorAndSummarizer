@@ -2,6 +2,9 @@ import easyocr
 import cv2
 import numpy as np
 import spacy
+from spacy.lang.en.stop_words import STOP_WORDS
+from string import punctuation
+from heapq import nlargest
 
 reader = easyocr.Reader(['en'],gpu = False) # load once only in memory.
 
